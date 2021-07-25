@@ -43,6 +43,16 @@ const NotebookType = new GraphQLObjectType({
   })
 })
 
+const NoteContentType = new GraphQLObjectType({
+  name: "NoteContent",
+  fields: () => ({
+    _id: { type: GraphQLID },
+    //notebook_id: { type: GraphQLID },
+    name: { type: GraphQLString },
+    content: { type: GraphQLString }
+  })
+})
+
 const UsersType = new GraphQLObjectType({
   name: "Users",
   fields: () => ({
@@ -70,7 +80,6 @@ const RootQuery = new GraphQLObjectType({
       type: NotesType,
       args: { _id: { type: GraphQLID } },
       resolve(parent, args){
-        console.log(args._id)
         return notes.findById(args._id)
       }
     },
@@ -123,6 +132,24 @@ const Mutation = new GraphQLObjectType({
         })
         return res
       }
+    },
+    addNoteContent: {
+      type: NoteContentType,
+      args: {
+        note_id: { type: GraphQLID },
+        //notebook_id: { type: GraphQLID },
+        //author_id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        content: { type: GraphQLString },
+      },
+      async resolve(parent, args) {
+        console.log(args)
+        return notes.findOneAndUpdate(
+          { _id: args.note_id },
+          { content: args.content },
+          { new: true }
+        )
+      }
     }
   }
 })
@@ -131,16 +158,3 @@ module.exports = new GraphQLSchema({
   query: RootQuery,
   mutation: Mutation
 })
-
-
-// async resolve(parent, args) {
-//   let res = []
-//   console.log(parent)
-//   for(let i=0;i<parent.notes.length;i++) {
-//     await notes.findById(parent.notes[i], (err, data) => {
-//       //console.log(data)
-//       res.push(data)
-//     })
-
-//   }
-// }
