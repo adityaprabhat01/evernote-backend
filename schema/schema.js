@@ -8,7 +8,6 @@ const {
   GraphQLSchema,
   GraphQLList, 
   GraphQLInt,
-  UniversalType
 } = graphql
 
 const notebooks = require("../models/Notebook")
@@ -143,12 +142,27 @@ const Mutation = new GraphQLObjectType({
         content: { type: GraphQLString },
       },
       async resolve(parent, args) {
-        console.log(args)
         return notes.findOneAndUpdate(
           { _id: args.note_id },
           { content: args.content },
           { new: true }
         )
+      }
+    },
+    deleteNote: {
+      type: NotesType,
+      args: {
+        note_id: { type: GraphQLID },
+        notebook_id: { type: GraphQLID }
+      },
+      resolve(parent, args) {
+        return notebooks.findByIdAndUpdate(
+          { _id: args.notebook_id },
+          { $pull: { notes: args.note_id } }
+        )
+        .then(data => {
+          notes.findByIdAndDelete(args.note_id).then(data => {})
+        })
       }
     }
   }
