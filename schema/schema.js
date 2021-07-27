@@ -134,25 +134,37 @@ const RootQuery = new GraphQLObjectType({
 const Mutation = new GraphQLObjectType({
   name: "Mutation",
   fields: {
+
     addNotebook: {
       type: NotebookType,
       args: {
         name: { type: GraphQLString },
+        _id: { type: GraphQLID }
       },
-      resolve(parent, args) {
-        let notebook = new notebooks({
-          name: args.name,
-        });
-        return notebook.save();
+      async resolve(parent, args) {
+        let res;
+        await notebooks
+          .create({
+            name: args.name,
+          })
+          .then(async (notebook) => {
+            await users.findOneAndUpdate(
+              { _id: args._id },
+              { $push: { notebooks: notebook._id } },
+              { new: true }
+            );
+          });
+        return res;
       },
     },
+
     addNote: {
       type: NoteType,
       args: {
         name: { type: GraphQLString },
         content: { type: GraphQLString },
-        authorId: { type: GraphQLString },
         notebookId: { type: GraphQLString },
+        _id: { type: GraphQLID }
       },
       async resolve(parent, args) {
         let res;
@@ -169,10 +181,16 @@ const Mutation = new GraphQLObjectType({
               { $push: { notes: note._id } },
               { new: true }
             );
+            await users.findOneAndUpdate(
+              { _id: args._id },
+              { $push: { notes: note._id } },
+              { new: true }
+            );
           });
         return res;
       },
     },
+
     addNoteContent: {
       type: NoteContentType,
       args: {
@@ -188,11 +206,13 @@ const Mutation = new GraphQLObjectType({
         );
       },
     },
+
     deleteNote: {
       type: NoteType,
       args: {
         note_id: { type: GraphQLID },
         notebook_id: { type: GraphQLID },
+        _id: { type: GraphQLID }
       },
       resolve(parent, args) {
         return notebooks
@@ -200,8 +220,12 @@ const Mutation = new GraphQLObjectType({
             { _id: args.notebook_id },
             { $pull: { notes: args.note_id } }
           )
-          .then((data) => {
-            notes.findByIdAndDelete(args.note_id).then((data) => {});
+          .then(async (data) => {
+            await notes.findByIdAndDelete(args.note_id).then((data) => {});
+            await users.findByIdAndUpdate(
+              { _id: args._id },
+              { $pull: { notes: args.note_id } }
+            )
           });
       },
     },
