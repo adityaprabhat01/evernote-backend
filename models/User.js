@@ -10,7 +10,15 @@ const userSchema = new Schema({
   },
   email: {
     type: String
-  }
+  },
+  notes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Notes'
+  }],
+  notebooks: [{
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Notebooks'
+  }],
 })
 
 const users = mongoose.model('users', userSchema)
