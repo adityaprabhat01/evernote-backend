@@ -148,12 +148,14 @@ const Mutation = new GraphQLObjectType({
             name: args.name,
           })
           .then(async (notebook) => {
-            await users.findOneAndUpdate(
+            res = notebook
+            return await users.findOneAndUpdate(
               { _id: args._id },
               { $push: { notebooks: notebook._id } },
               { new: true }
             );
           });
+          
         return res;
       },
     },
@@ -172,7 +174,6 @@ const Mutation = new GraphQLObjectType({
           .create({
             name: args.name,
             content: args.content,
-            authorId: args.authorId,
           })
           .then(async (note) => {
             res = note;
@@ -220,7 +221,7 @@ const Mutation = new GraphQLObjectType({
             { _id: args.notebook_id },
             { $pull: { notes: args.note_id } }
           )
-          .then(async (data) => {
+          .then(async (data) => {            
             await notes.findByIdAndDelete(args.note_id).then((data) => {});
             await users.findByIdAndUpdate(
               { _id: args._id },
@@ -229,6 +230,35 @@ const Mutation = new GraphQLObjectType({
           });
       },
     },
+
+    deleteNotebook: {
+      type: NotebookType,
+      args: {
+        notebook_id: { type: GraphQLID },
+        _id: { type: GraphQLID }
+      },
+      resolve(parent, args) {
+        return notebooks.findByIdAndDelete(
+          { _id: args.notebook_id }
+        )
+        .then(async (data) => {
+          console.log(data)
+          await users.findByIdAndUpdate(
+            { _id: args._id },
+            { $pull: { notebooks: args.notebook_id } }
+          )
+          await notes.deleteMany(
+            {
+              _id: {
+                $in: [
+                  ...data.notes
+                ]
+              }
+            }
+          )
+        })
+      }
+    }
   },
 });
 
