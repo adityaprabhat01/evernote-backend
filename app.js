@@ -8,7 +8,12 @@ const schema = require("./schema/schema")
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://cool-creponne-3a0e15.netlify.app", "http://localhost:3000"],
+    credentials: true,
+  })
+);
 const PORT = process.env.PORT || 4000;
 
 const dbURI = process.env.DBURI
