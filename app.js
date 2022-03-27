@@ -9,7 +9,7 @@ const schema = require("./schema/schema")
 const app = express();
 
 app.use(cors());
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 const dbURI = process.env.DBURI
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
